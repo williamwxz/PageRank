@@ -1,5 +1,6 @@
 #!/bin/sh
 ITERATION=1
+BETA=0.2
 #compile
 hadoop com.sun.tools.javac.Main *.java
 
@@ -15,8 +16,5 @@ hdfs dfs -mkdir -p input/pagerank0
 hdfs dfs -put pr.txt input/pagerank0/
 hdfs dfs -put transition.txt input/transition/
 
-# remove output
-hdfs dfs -rm -r output*
-
 # run
-hadoop jar pagerank.jar Driver input/transition input/pagerank output $ITERATION
+hadoop jar pagerank.jar Driver input/transition input/pagerank input/unitState $ITERATION $BETA

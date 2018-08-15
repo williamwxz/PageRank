@@ -51,7 +51,13 @@ public class UnitMultiplication {
     }
 
     public static class MultiplicationReducer extends Reducer<Text, Text, Text, Text> {
-
+        private float beta;
+        private static final float DEFAULT_BETA = 0.2f;
+        @Override
+        public void setup(Context context){
+            Configuration conf = context.getConfiguration();
+            beta = conf.getFloat("beta", DEFAULT_BETA);
+        }
 
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context)
@@ -74,7 +80,7 @@ public class UnitMultiplication {
                 String[] id_probs = cell.split("=");
                 String toPage = id_probs[0];
                 double prob = Double.parseDouble(id_probs[1]);
-                double multipliedVal = prob*pagerankCell;
+                double multipliedVal = prob*pagerankCell*(1-beta);
                 context.write(new Text(toPage), new Text(Double.toString(multipliedVal)));
             }
         }
@@ -83,10 +89,13 @@ public class UnitMultiplication {
     public static void main(String[] args) throws Exception {
 
         Configuration conf = new Configuration();
+        conf.setFloat("beta", Float.parseFloat(args[3]));
+
         Job job = Job.getInstance(conf);
         job.setJarByClass(UnitMultiplication.class);
 
-        //how chain two mapper classes?
+        ChainMapper.addMapper(job, TransitionMapper.class, Object.class, Text.class, Text.class, Text.class, conf);
+        ChainMapper.addMapper(job, PRMapper.class, Object.class, Text.class, Text.class, Text.class, conf);
 
         job.setReducerClass(MultiplicationReducer.class);
 
